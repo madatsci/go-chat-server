@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/madatsci/go-chat-server/api"
 	"github.com/madatsci/go-chat-server/internal/models"
 	"github.com/madatsci/go-chat-server/internal/providers"
 	"github.com/madatsci/go-chat-server/internal/services"
@@ -69,12 +68,8 @@ func runTestApp() {
 		fx.Provide(
 			providers.NewConfig,
 			providers.NewLogger,
-			repositories.NewUserRepository,
 			services.NewAccount,
-		),
-
-		fx.Invoke(
-			api.New,
+			repositories.NewUserRepository,
 		),
 	)
 
@@ -82,8 +77,10 @@ func runTestApp() {
 }
 
 func TestRegister(t *testing.T) {
-	for _, userData := range testCasesRegister {
+	accountService := services.NewAccount
 
+	for _, userData := range testCasesRegister {
+		user, err := accountService.Register(userData.Email, userData.Password)
 	}
 }
 
