@@ -10,7 +10,7 @@ func (a *Api) AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		token := c.Request().Header.Get("X-TOKEN")
 
-		user, err := a.userRepo.FindByToken(token)
+		user, err := a.accountService.ValidateToken(token)
 		if err != nil || user == nil {
 			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token")
 		}

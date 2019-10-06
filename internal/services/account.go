@@ -14,11 +14,13 @@ import (
 )
 
 const minPasswordLength = 6
+const tokenSecret = "a7f5847417601ecec17e154cf7e4b7371b75985fa72d015d8bddf0e020b34c71"
 
 type (
 	Account interface {
 		Register(email, password string) (*models.User, error)
 		Authorize(email, password string) (*models.User, error)
+		ValidateToken(token string) (*models.User, error)
 	}
 
 	AccountOptions struct {
@@ -38,6 +40,7 @@ var (
 	ErrMalformedEmail  = errors.New("Malformed email")
 	ErrPasswordToSmall = errors.New(fmt.Sprintf("Password must be more than %d symbols", minPasswordLength-1))
 	ErrUnauthorized    = errors.New("Unauthorized access")
+	ErrInvalidToken    = errors.New("Invalid token")
 	ErrInternal        = errors.New("Internal server error")
 )
 
@@ -92,12 +95,33 @@ func (a *accountService) Authorize(email, password string) (*models.User, error)
 	return user, nil
 }
 
-func generateToken(user *models.User) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"email": user.Email,
+func (a *accountService) ValidateToken(tokenString string) (*models.User, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return tokenSecret, nil
 	})
 
-	tokenString, err := token.SignedString([]byte("a7f5847417601ecec17e154cf7e4b7371b75985fa72d015d8bddf0e020b34c71"))
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		user, err := a.accountRepo.FindByEmail(claims["email"])
+
+		if err != nil {
+			return nil, ErrInvalidToken
+		}
+
+		if user.Password != claims["password"] {
+			return nil, ErrUnauthorized
+		}
+	}
+
+	return nil, ErrInvalidToken
+}
+
+func generateToken(user *models.User) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"email":    user.Email,
+		"password": user.Password,
+	})
+
+	tokenString, err := token.SignedString([]byte(tokenSecret))
 
 	return tokenString, err
 }
