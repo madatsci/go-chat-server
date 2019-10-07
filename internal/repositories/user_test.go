@@ -9,20 +9,18 @@ import (
 
 type (
 	// User describes methods for storing user entity
-	User interface {
-		Create(email, password string) (*models.User, error)
-		FindByEmail(email string) (*models.User, error)
-		FindByToken(token string) (*models.User, error)
-		UpdateToken(user *models.User, token string) error
+	UserTest interface {
+		CreateTest(email, password string) (*models.User, error)
+		FindByEmailTest(email string) (*models.User, error)
 	}
 
-	userRepository struct {
+	userRepositoryTest struct {
 		fixture []models.User
 	}
 )
 
 // NewUserRepository initializes a new test repository
-func NewUserRepository() User {
+func NewUserRepositoryTest() UserTest {
 	testUserData := []models.User{
 		{
 			ID:        1,
@@ -42,12 +40,12 @@ func NewUserRepository() User {
 		},
 	}
 
-	return &userRepository{
+	return &userRepositoryTest{
 		fixture: testUserData,
 	}
 }
 
-func (u *userRepository) Create(email, hashedPassword string) (*models.User, error) {
+func (u *userRepositoryTest) CreateTest(email, hashedPassword string) (*models.User, error) {
 	user := models.User{
 		Email:    email,
 		Password: hashedPassword,
@@ -62,7 +60,7 @@ func (u *userRepository) Create(email, hashedPassword string) (*models.User, err
 	return &user, nil
 }
 
-func (u *userRepository) FindByEmail(email string) (*models.User, error) {
+func (u *userRepositoryTest) FindByEmailTest(email string) (*models.User, error) {
 	for _, userData := range u.fixture {
 		if userData.Email == email {
 			return &userData, nil
@@ -70,18 +68,4 @@ func (u *userRepository) FindByEmail(email string) (*models.User, error) {
 	}
 
 	return nil, fmt.Errorf("User with this email not found")
-}
-
-func (u *userRepository) FindByToken(token string) (*models.User, error) {
-	for _, userData := range u.fixture {
-		if userData.Token == token {
-			return &userData, nil
-		}
-	}
-
-	return nil, fmt.Errorf("User with this token not found")
-}
-
-func (u *userRepository) UpdateToken(user *models.User, token string) error {
-	return nil
 }
