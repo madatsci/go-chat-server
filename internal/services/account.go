@@ -81,16 +81,13 @@ func (a *accountService) Authorize(email, password string) (*models.User, error)
 		return nil, ErrUnauthorized
 	}
 
-	token, err := generateToken(user)
+	token, err := generateToken(user.Email, password)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if err := a.accountRepo.UpdateToken(user, token); err != nil {
-		a.logger.Errorf("Error updating user token: %v", err)
-		return nil, ErrUnauthorized
-	}
+	user.Token = token
 
 	return user, nil
 }
@@ -133,10 +130,10 @@ func (a *accountService) ValidateToken(tokenString string) (*models.User, error)
 	return nil, ErrInvalidToken
 }
 
-func generateToken(user *models.User) (string, error) {
+func generateToken(email, hashedPassword string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"email":    user.Email,
-		"password": user.Password,
+		"email":    email,
+		"password": hashedPassword,
 	})
 
 	tokenString, err := token.SignedString([]byte(tokenSecret))
