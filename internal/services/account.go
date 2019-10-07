@@ -100,14 +100,32 @@ func (a *accountService) ValidateToken(tokenString string) (*models.User, error)
 		return tokenSecret, nil
 	})
 
+	if err != nil {
+		return nil, ErrInternal
+	}
+
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		user, err := a.accountRepo.FindByEmail(claims["email"])
+		var email, password string
+
+		if _, ok := (claims["email"]).(string); !ok {
+			return nil, ErrInternal
+		}
+
+		email = (claims["email"]).(string)
+
+		user, err := a.accountRepo.FindByEmail(email)
 
 		if err != nil {
 			return nil, ErrInvalidToken
 		}
 
-		if user.Password != claims["password"] {
+		if _, ok := (claims["password"]).(string); !ok {
+			return nil, ErrInternal
+		}
+
+		password = (claims["password"]).(string)
+
+		if user.Password != password {
 			return nil, ErrUnauthorized
 		}
 	}
