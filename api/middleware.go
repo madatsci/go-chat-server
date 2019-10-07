@@ -12,7 +12,7 @@ func (a *Api) AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 		user, err := a.accountService.ValidateToken(token)
 		if err != nil || user == nil {
-			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token")
+			return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 		}
 
 		c.Set("user", user)

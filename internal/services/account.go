@@ -81,7 +81,7 @@ func (a *accountService) Authorize(email, password string) (*models.User, error)
 		return nil, ErrUnauthorized
 	}
 
-	token, err := generateToken(user.Email, password)
+	token, err := a.generateToken(user.Email, user.Password)
 
 	if err != nil {
 		return nil, err
@@ -94,10 +94,12 @@ func (a *accountService) Authorize(email, password string) (*models.User, error)
 
 func (a *accountService) ValidateToken(tokenString string) (*models.User, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return tokenSecret, nil
+		return []byte(tokenSecret), nil
 	})
 
 	if err != nil {
+		a.logger.Debugf("Error parsing token: %v", err.Error())
+
 		return nil, ErrInternal
 	}
 
@@ -105,24 +107,33 @@ func (a *accountService) ValidateToken(tokenString string) (*models.User, error)
 		var email, password string
 
 		if _, ok := (claims["email"]).(string); !ok {
+			a.logger.Debugf("Error parsing email from token: %v", err.Error())
+
 			return nil, ErrInternal
 		}
 
 		email = (claims["email"]).(string)
+		a.logger.Debugf("Parsed email from token: %v", email)
 
 		user, err := a.accountRepo.FindByEmail(email)
 
 		if err != nil {
+			a.logger.Debugf("Error finding user by email: %v", err.Error())
+
 			return nil, ErrInvalidToken
 		}
 
 		if _, ok := (claims["password"]).(string); !ok {
+			a.logger.Debugf("Error parsing password from token: %v", err.Error())
+
 			return nil, ErrInternal
 		}
 
 		password = (claims["password"]).(string)
 
 		if user.Password != password {
+			a.logger.Debugf("Mismatch password: wanted %v (from token), got %v", password, user.Password)
+
 			return nil, ErrUnauthorized
 		}
 	}
@@ -130,11 +141,13 @@ func (a *accountService) ValidateToken(tokenString string) (*models.User, error)
 	return nil, ErrInvalidToken
 }
 
-func generateToken(email, hashedPassword string) (string, error) {
+func (a *accountService) generateToken(email, hashedPassword string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"email":    email,
 		"password": hashedPassword,
 	})
+
+	a.logger.Debugf("Generate token with email %v and password hash %v", email, hashedPassword)
 
 	tokenString, err := token.SignedString([]byte(tokenSecret))
 
