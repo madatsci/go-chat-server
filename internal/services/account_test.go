@@ -18,14 +18,14 @@ func TestRegister(t *testing.T) {
 	mockUserRepository := mocks.NewMockUser(ctrl)
 
 	// Create должен вызываться с хэшем пароля
-	mockUserRepository.EXPECT().Create("test@sdfg", "testtest").Return(&models.User{
+	mockUserRepository.EXPECT().Create("test", "testtest").Return(&models.User{
 		Email:     "test",
 		Password:  "test",
 		ID:        1,
 		Token:     "",
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
-	}, nil)
+	}, nil).AnyTimes()
 
 	logger, err := providers.NewLogger()
 
@@ -34,7 +34,7 @@ func TestRegister(t *testing.T) {
 		AccountRepo: mockUserRepository,
 	})
 
-	user, err := account.Register("test@sdfg", "testtest")
+	user, err := account.Register("test", "testtest")
 
 	if user != nil || err == nil {
 		t.Errorf("Created user with wrong email")
