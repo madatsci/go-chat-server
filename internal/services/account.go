@@ -108,7 +108,7 @@ func (a *accountService) Authorize(email, password string) (*models.User, error)
 	return user, nil
 }
 
-// ValidateToken validates provided token and returns user that is retreived from that token
+// ValidateToken validates provided token and returns user that is retrieved from that token
 func (a *accountService) ValidateToken(tokenString string) (*models.User, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return []byte(tokenSecret), nil
