@@ -73,4 +73,54 @@ func TestAccountService(t *testing.T) {
 			require.Equal(t, newUser, user)
 		})
 	})
+
+	t.Run("Authorize", func(t *testing.T) {
+		authUser := &models.User{
+			ID:        1,
+			Email:     "user@example.com",
+			Password:  "hashed_password",
+			Token:     "",
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		}
+
+		t.Run("Errors", func(t *testing.T) {
+			t.Run("Error should be returned if user was not found", func(t *testing.T) {
+				mockUserRepository.EXPECT().FindByEmail("user@example.com").Return(nil, nil)
+
+				user, err := accountService.Authorize("user@example.com", "123456")
+				require.Nil(t, user)
+				require.Error(t, err)
+				require.Equal(t, err, ErrUnauthorized)
+			})
+
+			t.Run("Error should be returned if database error occurred", func(t *testing.T) {
+				mockUserRepository.EXPECT().FindByEmail("user@example.com").Return(nil, errors.New("Some database error"))
+
+				user, err := accountService.Authorize("user@example.com", "123456")
+				require.Nil(t, user)
+				require.Error(t, err)
+				require.Equal(t, err, ErrUnauthorized)
+			})
+
+			t.Run("Error should be returned if password does not match hash", func(t *testing.T) {
+				mockUserRepository.EXPECT().FindByEmail("user@example.com").Return(authUser, nil)
+				mockHasher.EXPECT().Compare("123456", authUser.Password).Return(false)
+
+				user, err := accountService.Authorize("user@example.com", "123456")
+				require.Nil(t, user)
+				require.Error(t, err)
+				require.Equal(t, err, ErrUnauthorized)
+			})
+		})
+
+		t.Run("Success", func(t *testing.T) {
+			mockUserRepository.EXPECT().FindByEmail("user@example.com").Return(authUser, nil)
+			mockHasher.EXPECT().Compare("123456", authUser.Password).Return(true)
+
+			user, err := accountService.Authorize("user@example.com", "123456")
+			require.Equal(t, authUser, user)
+			require.NoError(t, err)
+		})
+	})
 }
