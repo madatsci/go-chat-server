@@ -1,5 +1,1 @@
 package providers
-
-func main() {
-
-}

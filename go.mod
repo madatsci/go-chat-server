@@ -8,6 +8,7 @@ require (
 	github.com/golang/mock v1.3.1
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/playneta/go-sessions v0.0.0-20190923181256-3e3510d56419 // indirect
+	github.com/stretchr/testify v1.4.0
 	go.uber.org/fx v1.9.0
 	go.uber.org/zap v1.10.0
 	golang.org/x/crypto v0.0.0-20190923035154-9ee001bba392
