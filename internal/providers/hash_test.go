@@ -2,6 +2,6 @@ package providers
 
 import "testing"
 
-func TestConfig(t *testing.T) {
+func TestBcryptHashHash(t *testing.T) {
 
 }
