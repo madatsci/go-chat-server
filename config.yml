@@ -1,0 +1,11 @@
+db:
+  user: postgres
+  password: password
+  db: go_chat_server
+  addr: 127.0.0.1:5432
+hash:
+  complexity: 12
+api:
+  addr: 9000
+ws:
+  addr: 9002
