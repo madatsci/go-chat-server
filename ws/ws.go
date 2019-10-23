@@ -50,10 +50,11 @@ var (
 
 func New(opts Options) {
 	socket := &WebSocket{
-		logger:         opts.Logger,
-		config:         opts.Config,
-		accountService: opts.AccountService,
-		hub:            make(map[string]User),
+		logger:           opts.Logger,
+		config:           opts.Config,
+		accountService:   opts.AccountService,
+		chatMessagesRepo: opts.ChatMessagesRepo,
+		hub:              make(map[string]User),
 	}
 
 	opts.Lc.Append(fx.Hook{
