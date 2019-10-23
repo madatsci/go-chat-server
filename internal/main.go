@@ -5,6 +5,7 @@ import (
 	"github.com/madatsci/go-chat-server/internal/providers"
 	"github.com/madatsci/go-chat-server/internal/repositories"
 	"github.com/madatsci/go-chat-server/internal/services"
+	"github.com/madatsci/go-chat-server/ws"
 	"go.uber.org/fx"
 )
 
@@ -22,6 +23,7 @@ func Run() {
 
 		fx.Invoke(
 			api.New,
+			ws.New,
 		),
 	)
 
