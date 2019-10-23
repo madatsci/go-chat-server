@@ -18,6 +18,7 @@ func Run() {
 			providers.NewLogger,
 			providers.NewBcryptHasher,
 			repositories.NewUserRepository,
+			repositories.NewChatMessageRepository,
 			services.NewAccount,
 		),
 

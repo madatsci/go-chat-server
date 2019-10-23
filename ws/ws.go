@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/gorilla/websocket"
 	"github.com/madatsci/go-chat-server/internal/models"
+	"github.com/madatsci/go-chat-server/internal/repositories"
 	"github.com/madatsci/go-chat-server/internal/services"
 	"github.com/spf13/viper"
 	"go.uber.org/fx"
@@ -15,12 +16,12 @@ import (
 
 type (
 	WebSocket struct {
-		logger         *zap.SugaredLogger
-		config         *viper.Viper
-		accountService services.Account
-		history        []Message
-		hub            map[string]User
-		hmu            sync.RWMutex
+		logger           *zap.SugaredLogger
+		config           *viper.Viper
+		accountService   services.Account
+		chatMessagesRepo repositories.ChatMessage
+		hub              map[string]User
+		hmu              sync.RWMutex
 	}
 
 	User struct {
@@ -31,10 +32,11 @@ type (
 	Options struct {
 		fx.In
 
-		Logger         *zap.SugaredLogger
-		Config         *viper.Viper
-		Lc             fx.Lifecycle
-		AccountService services.Account
+		Logger           *zap.SugaredLogger
+		Config           *viper.Viper
+		Lc               fx.Lifecycle
+		AccountService   services.Account
+		ChatMessagesRepo repositories.ChatMessage
 	}
 )
 
@@ -101,16 +103,22 @@ func (s *WebSocket) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Sending history to user
 	s.logger.Info("sending history to user")
-	for _, message := range s.history {
-		if err := c.WriteJSON(message); err != nil {
-			s.logger.Errorf("error sending history: %v", err)
+	messagesHistory, err := s.chatMessagesRepo.GetAll()
+
+	if err != nil {
+		for _, message := range messagesHistory {
+			if err := c.WriteJSON(message); err != nil {
+				s.logger.Errorf("error sending history: %v", err)
+			}
 		}
+	} else {
+		s.logger.Errorf("error reading history from database: %v", err)
 	}
 
 	// Message handling
 	s.logger.Info("start listening for incoming messages")
 	for {
-		var msg Message
+		var msg models.ChatMessage
 		if err := c.ReadJSON(&msg); err != nil {
 			s.logger.Errorf("error reading message: %v", err)
 			return
@@ -147,7 +155,7 @@ func (s *WebSocket) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					continue
 				}
 			}
-			s.history = append(s.history, msg)
+			s.chatMessagesRepo.Create(msg.From, msg.To, msg.Text)
 			s.hmu.RUnlock()
 		}
 	}

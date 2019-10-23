@@ -1,8 +1,9 @@
-package ws
+package models
 
 import "time"
 
-type Message struct {
+type ChatMessage struct {
+	ID       int64     `json:"id"`
 	From     string    `json:"from"`
 	To       string    `json:"to"`
 	Text     string    `json:"text"`
