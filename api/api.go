@@ -17,7 +17,7 @@ type (
 		config         *viper.Viper
 		userRepo       repositories.User
 		accountService services.Account
-		echo *echo.Echo
+		echo           *echo.Echo
 	}
 
 	ApiOptions struct {
@@ -37,7 +37,7 @@ func New(opts ApiOptions) {
 		config:         opts.Config,
 		userRepo:       opts.UserRepo,
 		accountService: opts.AccountService,
-		echo: echo.New(),
+		echo:           echo.New(),
 	}
 
 	a.echo.HidePort = true

@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/gorilla/websocket"
 	"github.com/madatsci/go-chat-server/internal/models"
-	"github.com/madatsci/go-chat-server/internal/repositories"
 	"github.com/madatsci/go-chat-server/internal/services"
 	"github.com/spf13/viper"
 	"go.uber.org/fx"
@@ -32,9 +31,9 @@ type (
 	Options struct {
 		fx.In
 
-		Logger   *zap.SugaredLogger
-		Config   *viper.Viper
-		Lc       fx.Lifecycle
+		Logger         *zap.SugaredLogger
+		Config         *viper.Viper
+		Lc             fx.Lifecycle
 		AccountService services.Account
 	}
 )
@@ -49,10 +48,10 @@ var (
 
 func New(opts Options) {
 	socket := &WebSocket{
-		logger:   opts.Logger,
-		config:   opts.Config,
+		logger:         opts.Logger,
+		config:         opts.Config,
 		accountService: opts.AccountService,
-		hub:      make(map[string]User),
+		hub:            make(map[string]User),
 	}
 
 	opts.Lc.Append(fx.Hook{

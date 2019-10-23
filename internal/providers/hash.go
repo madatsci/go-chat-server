@@ -22,7 +22,7 @@ type (
 	BcryptHasherOptions struct {
 		fx.In
 
-		Config *viper.Viper
+		Config     *viper.Viper
 		Complexity int
 	}
 )

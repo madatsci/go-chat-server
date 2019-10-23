@@ -15,7 +15,7 @@ func NewDB(config *viper.Viper) (*pg.DB, error) {
 		User:     config.GetString("db.user"),
 		Password: config.GetString("db.password"),
 		Database: config.GetString("db.db"),
-		Addr: config.GetString("db.addr"),
+		Addr:     config.GetString("db.addr"),
 	})
 
 	if _, err := conn.ExecOne("SELECT 1"); err != nil {
