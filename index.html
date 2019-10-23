@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Websocket Chat Testing</title>
+    <style>
+        #chat {
+            width: 600px;
+            height: 600px;
+            background: #ccc;
+            margin-bottom:10px;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const chat = document.getElementById("chat");
+            const connectButton = document.getElementById("connect");
+            const sendButton = document.getElementById("send");
+            const to = document.getElementById("to");
+            const text = document.getElementById("text");
+            const token = document.getElementById("token");
+
+            connectButton.onclick = function () {
+                const ws = new WebSocket("ws://127.0.0.1:9002?token=" + token.value);
+
+                ws.onmessage = function (message) {
+                    try {
+                        let msg = JSON.parse(message.data);
+
+                        let p = document.createElement("p");
+                        let msgHeader;
+
+                        if (!msg.to) {
+                            msgHeader = "<b>" + msg.from + "</b>";
+                        } else {
+                            msgHeader = "<b>" + msg.from + " -> " + msg.to + "</b>";
+                        }
+
+                        p.innerHTML = msgHeader + " [" + msg.date_time + "]: " + msg.text;
+
+                        chat.appendChild(p);
+                    } catch (e) {
+                        console.error(e);
+                    }
+                    // console.log('message', message);
+                };
+
+                ws.onerror = function (error) {
+                    console.error(error);
+                };
+
+                ws.onopen = function () {
+                    console.log("connected to webscoket");
+
+                    sendButton.onclick = function () {
+                        let message = {
+                            to: to.value,
+                            text: text.value
+                        };
+
+                        console.log(message);
+                        ws.send(JSON.stringify(message));
+                    }
+                }
+            }
+
+        })
+    </script>
+
+    <input id="token" type="text">
+    <button id="connect">Connect</button>
+    <br><br>
+    <div id="chat">
+
+    </div>
+    <div>
+        To: <input type="text" id="to">
+        Text: <input type="text" id="text">
+        <button id="send">Submit</button>
+    </div>
+</body>
+</html>
