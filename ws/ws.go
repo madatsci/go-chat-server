@@ -106,7 +106,7 @@ func (s *WebSocket) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.logger.Info("sending history to user")
 	messagesHistory, err := s.chatMessagesRepo.GetAll()
 
-	if err != nil {
+	if err == nil {
 		for _, message := range messagesHistory {
 			if err := c.WriteJSON(message); err != nil {
 				s.logger.Errorf("error sending history: %v", err)
