@@ -6,6 +6,6 @@ db:
 hash:
   complexity: 12
 api:
-  addr: 9000
+  addr: :9000
 ws:
-  addr: 9002
+  addr: :9002
