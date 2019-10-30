@@ -104,16 +104,18 @@ func (s *WebSocket) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Sending history to user
 	s.logger.Info("sending history to user")
-	messagesHistory, err := s.chatMessagesRepo.GetAll()
-
-	if err == nil {
-		for _, message := range messagesHistory {
-			if err := c.WriteJSON(message); err != nil {
-				s.logger.Errorf("error sending history: %v", err)
-			}
-		}
-	} else {
+	messagesHistory, err := s.accountService.GetChatHistory(*user)
+	if err != nil {
 		s.logger.Errorf("error reading history from database: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+
+		return
+	}
+
+	for _, message := range messagesHistory {
+		if err := c.WriteJSON(message); err != nil {
+			s.logger.Errorf("error sending history: %v", err)
+		}
 	}
 
 	// Message handling
@@ -156,7 +158,11 @@ func (s *WebSocket) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					continue
 				}
 			}
-			s.chatMessagesRepo.Create(msg.From, msg.To, msg.Text)
+			_, err := s.chatMessagesRepo.Create(msg.From, msg.To, msg.Text)
+			if err != nil {
+				s.logger.Error("error saving message in database: %v", err)
+			}
+
 			s.hmu.RUnlock()
 		}
 	}

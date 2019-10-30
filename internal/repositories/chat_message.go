@@ -7,8 +7,9 @@ import (
 
 type (
 	ChatMessage interface {
-		Create(from, to, text string) (*models.ChatMessage, error)
-		GetAll() ([]models.ChatMessage, error)
+		Create(message *models.ChatMessage) error
+		GetLastPublicMessages(limit int) ([]models.ChatMessage, error)
+		GetLastPrivateMessages(user models.User, limit int) ([]models.ChatMessage, error)
 	}
 
 	chatMessageRepository struct {
@@ -23,25 +24,58 @@ func NewChatMessageRepository(db *pg.DB) ChatMessage {
 }
 
 // Create saves new chat message in database
-func (c *chatMessageRepository) Create(from, to, text string) (*models.ChatMessage, error) {
-	chatMessage := models.ChatMessage{
-		From: from,
-		To:   to,
-		Text: text,
+func (c *chatMessageRepository) Create(message *models.ChatMessage) error {
+	if _, err := c.db.Model(message).Relation("User").Insert(); err != nil {
+		return err
 	}
 
-	if _, err := c.db.Model(&chatMessage).Insert(); err != nil {
-		return nil, err
+	if err := c.db.Model(message).
+		Column("message.*").
+		Relation("User").Relation("Receiver").
+		Where("message.id=?", message.ID).First(); err != nil {
+		return err
 	}
 
-	return &chatMessage, nil
+	return nil
 }
 
 // GetAll retrieves all chat messages from database
-func (c *chatMessageRepository) GetAll() ([]models.ChatMessage, error) {
+func (c *chatMessageRepository) GetLastPublicMessages(limit int) ([]models.ChatMessage, error) {
 	var chatMessages []models.ChatMessage
 
-	if err := c.db.Model(&chatMessages).Select(); err != nil {
+	if err := c.db.Model(&chatMessages).
+		Column("message.*").
+		Where("receiver_id IS NULL").
+		Order("id desc").
+		Relation("Receiver").
+		Relation("User").
+		Limit(limit).
+		Select(); err != nil {
+		if err ==pg.ErrNoRows {
+			return []models.ChatMessage{}, nil
+		}
+
+		return nil, err
+	}
+
+	return chatMessages, nil
+}
+
+func (c *chatMessageRepository) GetLastPrivateMessages(user models.User, limit int) ([]models.ChatMessage, error) {
+	var chatMessages []models.ChatMessage
+
+	if err := c.db.Model(&chatMessages).
+		Column("messages.*").
+		Where("user_id=? and (receiver_id > 0 or receiver_id = ?)", user.ID, user.ID).
+		Order("id desc").
+		Relation("Receiver").
+		Relation("User").
+		Limit(limit).
+		Select(); err != nil {
+		if err ==pg.ErrNoRows {
+			return []models.ChatMessage{}, nil
+		}
+
 		return nil, err
 	}
 
