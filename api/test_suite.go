@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 type suite struct {
@@ -59,6 +60,23 @@ func newTestSuite(t *testing.T, method string, body io.Reader, headers map[strin
 		context:        c,
 		api:            a,
 	}
+}
+
+func (s *suite) authorize() {
+	ts, _ := time.Parse(time.RFC1123, time.RFC1123)
+
+	// Authorizing user
+	user := &models.User{
+		ID: 1,
+		Email: "test@test.com",
+		Password: "my_tokenized_password",
+		Token: "",
+		CreatedAt: ts,
+		UpdatedAt: ts,
+	}
+
+	s.user = user
+	s.context.Set("user", user)
 }
 
 func (s *suite) close() {
