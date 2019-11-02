@@ -11,7 +11,6 @@ import (
 	"go.uber.org/zap"
 	"net/http"
 	"sync"
-	"time"
 )
 
 type (
@@ -118,10 +117,18 @@ func (s *WebSocket) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Sending user join notification
+	for _, user := range s.hub {
+		if err := user.Conn.WriteJSON(NewUserJoinEvent(*user.Model)); err != nil {
+			s.logger.Error("error sending join notification: %v", err)
+			continue
+		}
+	}
+
 	// Message handling
 	s.logger.Info("start listening for incoming messages")
 	for {
-		var msg models.ChatMessage
+		var msg MessageEvent
 		if err := c.ReadJSON(&msg); err != nil {
 			s.logger.Errorf("error reading message: %v", err)
 			return
@@ -129,40 +136,38 @@ func (s *WebSocket) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		s.logger.Infof("got incoming message: %v", msg)
 
-		msg.From = user.Email
-		msg.DateTime = time.Now()
-		if msg.To != "" {
+		// Create and save message
+		message, err := s.accountService.CreateMessage(*user, msg.To, msg.Text)
+		if err != nil {
+			s.logger.Errorf("error saving message: %v", err)
+			continue
+		}
+
+		if message.Receiver != nil {
 			s.hmu.RLock()
-			userTo, ok := s.hub[msg.To]
+			userTo, ok := s.hub[message.Receiver.Email]
 			s.hmu.RUnlock()
 
 			if !ok {
-				s.logger.Errorf("unknown user to send message: %s", msg.To)
+				s.logger.Errorf("unknown user to send message to: %s", msg.To)
 				continue
 			}
 
-			msg.To = userTo.Model.Email
-
-			if err := c.WriteJSON(msg); err != nil {
-				s.logger.Errorf("error sending message: %v", err)
+			if err := c.WriteJSON(NewMessageEvent(*message)); err != nil {
+				s.logger.Errorf("error sending message to its sender: %v", err)
 			}
 
-			if err := userTo.Conn.WriteJSON(msg); err != nil {
-				s.logger.Errorf("error sending message: %v", err)
+			if err := userTo.Conn.WriteJSON(NewMessageEvent(*message)); err != nil {
+				s.logger.Errorf("error sending message to receiver: %v", err)
 			}
 		} else {
 			s.hmu.RLock()
 			for _, user := range s.hub {
 				if err := user.Conn.WriteJSON(msg); err != nil {
-					s.logger.Error("error sending message: %v", err)
+					s.logger.Error("error sending message to user from hub: %v", err)
 					continue
 				}
 			}
-			_, err := s.chatMessagesRepo.Create(msg.From, msg.To, msg.Text)
-			if err != nil {
-				s.logger.Error("error saving message in database: %v", err)
-			}
-
 			s.hmu.RUnlock()
 		}
 	}

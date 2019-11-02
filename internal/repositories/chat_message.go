@@ -31,7 +31,8 @@ func (c *chatMessageRepository) Create(message *models.ChatMessage) error {
 
 	if err := c.db.Model(message).
 		Column("message.*").
-		Relation("User").Relation("Receiver").
+		Relation("User").
+		Relation("Receiver").
 		Where("message.id=?", message.ID).First(); err != nil {
 		return err
 	}
