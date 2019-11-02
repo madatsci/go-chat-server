@@ -63,20 +63,26 @@ func newTestSuite(t *testing.T, method string, body io.Reader, headers map[strin
 }
 
 func (s *suite) authorize() {
+	user := s.getDummyUser()
+
+	s.user = user
+	s.context.Set("user", user)
+}
+
+func (s *suite) getDummyUser() *models.User {
 	ts, _ := time.Parse(time.RFC1123, time.RFC1123)
 
 	// Authorizing user
 	user := &models.User{
 		ID: 1,
 		Email: "test@test.com",
-		Password: "my_tokenized_password",
+		Password: "my_hashed_password",
 		Token: "",
 		CreatedAt: ts,
 		UpdatedAt: ts,
 	}
 
-	s.user = user
-	s.context.Set("user", user)
+	return user
 }
 
 func (s *suite) close() {
