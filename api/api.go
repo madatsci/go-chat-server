@@ -12,6 +12,7 @@ import (
 )
 
 type (
+	// Api structure represents API interaction
 	Api struct {
 		logger         *zap.SugaredLogger
 		config         *viper.Viper
@@ -20,6 +21,7 @@ type (
 		echo           *echo.Echo
 	}
 
+	// ApiOptions represents options needed to instantiate Api
 	ApiOptions struct {
 		fx.In
 
@@ -31,6 +33,7 @@ type (
 	}
 )
 
+// New creates a new instance of Api and injects it into fx.Lifecycle
 func New(opts ApiOptions) {
 	a := &Api{
 		logger:         opts.Logger,
