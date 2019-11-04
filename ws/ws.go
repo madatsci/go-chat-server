@@ -112,7 +112,7 @@ func (s *WebSocket) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, message := range messagesHistory {
-		if err := c.WriteJSON(message); err != nil {
+		if err := c.WriteJSON(NewMessageEvent(message)); err != nil {
 			s.logger.Errorf("error sending history: %v", err)
 		}
 	}

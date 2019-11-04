@@ -28,18 +28,24 @@
 
                 ws.onmessage = function (message) {
                     try {
-                        let msg = JSON.parse(message.data);
-
+                        let messageData = JSON.parse(message.data);
+                        let msg = messageData.data;
+                        let type = messageData.type;
                         let p = document.createElement("p");
-                        let msgHeader;
 
-                        if (!msg.to) {
-                            msgHeader = "<b>" + msg.from + "</b>";
-                        } else {
-                            msgHeader = "<b>" + msg.from + " -> " + msg.to + "</b>";
+                        if (type === 'message') {
+                            let msgHeader;
+
+                            if (!msg.to) {
+                                msgHeader = "<b>" + msg.from + "</b>";
+                            } else {
+                                msgHeader = "<b>" + msg.from + " -> " + msg.to + "</b>";
+                            }
+
+                            p.innerHTML = msgHeader + " [" + msg.date_time + "]: " + msg.text;
+                        } else if (type === 'join') {
+                            p.innerHTML = msg.user + ' has joined';
                         }
-
-                        p.innerHTML = msgHeader + " [" + msg.date_time + "]: " + msg.text;
 
                         chat.appendChild(p);
                     } catch (e) {
@@ -54,6 +60,7 @@
 
                 ws.onopen = function () {
                     console.log("connected to webscoket");
+                    chat.innerHTML = '';
 
                     sendButton.onclick = function () {
                         let message = {
