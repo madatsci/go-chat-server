@@ -118,8 +118,8 @@ func (s *WebSocket) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Sending user join notification
-	for _, user := range s.hub {
-		if err := user.Conn.WriteJSON(NewUserJoinEvent(*user.Model)); err != nil {
+	for _, hubUser := range s.hub {
+		if err := hubUser.Conn.WriteJSON(NewUserJoinEvent(*user)); err != nil {
 			s.logger.Error("error sending join notification: %v", err)
 			continue
 		}
