@@ -30,10 +30,11 @@ func (c *chatMessageRepository) Create(message *models.ChatMessage) error {
 	}
 
 	if err := c.db.Model(message).
-		Column("message.*").
+		Column("chat_message.*").
 		Relation("User").
 		Relation("Receiver").
-		Where("message.id=?", message.ID).First(); err != nil {
+		Where("message.id=?", message.ID).
+		First(); err != nil {
 		return err
 	}
 
@@ -45,7 +46,7 @@ func (c *chatMessageRepository) GetLastPublicMessages(limit int) ([]models.ChatM
 	var chatMessages []models.ChatMessage
 
 	if err := c.db.Model(&chatMessages).
-		Column("message.*").
+		Column("chat_message.*").
 		Where("receiver_id IS NULL").
 		Order("id desc").
 		Relation("Receiver").
@@ -66,7 +67,7 @@ func (c *chatMessageRepository) GetLastPrivateMessages(user models.User, limit i
 	var chatMessages []models.ChatMessage
 
 	if err := c.db.Model(&chatMessages).
-		Column("messages.*").
+		Column("chat_message.*").
 		Where("user_id=? and (receiver_id > 0 or receiver_id = ?)", user.ID, user.ID).
 		Order("id desc").
 		Relation("Receiver").
