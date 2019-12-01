@@ -19,7 +19,7 @@ require (
 	github.com/pressly/goose v2.6.0+incompatible
 	github.com/spf13/viper v1.4.0
 	github.com/stretchr/testify v1.4.0
-	github.com/urfave/cli v1.22.1 // indirect
+	github.com/urfave/cli v1.22.1
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	go.uber.org/dig v1.7.0 // indirect
 	go.uber.org/fx v1.9.0
